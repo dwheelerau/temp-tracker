@@ -12,8 +12,6 @@ ser = serial.Serial('/dev/ttyUSB0',9600)
 #these are reset each hour
 temp_rec = []
 #change this to [4] for testing will run every 1 min and draw graph at 12mins
-hour = time.localtime()[3]
-
 #this is reset each day 12 to 12
 filename = time.ctime()+".txt"
 
@@ -36,21 +34,22 @@ while True:
             temp_rec.append(temp)
             #write out the temp every hour need to add day function
             #write a graph sometime between 0-23 hr each day change to [4] for min
-            now = time.localtime()[3]
+            nowh = time.localtime()[3]
+            nowm = time.localtime()[4]
             #record each hour, start loop as clock ticks over
-            if now != hour:
+            if nowm == 59:
                 ave_temp = numpy.average(temp_rec)
                 print "On %s the temperature was %s deg C"%(time.ctime(),round(ave_temp,1))
                 outfile = open(filename,'a')
-                #hour\ttemp
-                out_data = "%s\t%s\n"%(now,round(ave_temp,1))
+                #hour\ttemp add 1 to hour since 59min
+                out_data = "%s\t%s\n"%(nowh+1,round(ave_temp,1))
                 outfile.write(out_data)
                 outfile.close()
                 #reset
                 temp_rec = []
-                hour = now
+                hour = nowh
                 #12 stuffs up the graph, use 0 instead
-                if now == 0:
+                if nowh == 12:
                     #draw a grahp ending in png here
                     temp_data = DataFrame(pd.read_table(filename,index_col=0\
                             ,header=None))
