@@ -19,6 +19,8 @@ filename = time.ctime()+".txt"
 
 while True:
     try:
+        #lets sleep for 10 seconds to save power
+        #time.sleep(10)
         #main action part of the loop
         if ser.read(1) == '~':#start bite
             vals = []
@@ -33,7 +35,7 @@ while True:
             temp = (analVal/1023.0*1.2*3.0*100)-273.15
             temp_rec.append(temp)
             #write out the temp every hour need to add day function
-            #write a graph a 12:01 pm each day change to [4] for min
+            #write a graph sometime between 0-23 hr each day change to [4] for min
             now = time.localtime()[3]
             #record each hour, start loop as clock ticks over
             if now != hour:
@@ -47,7 +49,8 @@ while True:
                 #reset
                 temp_rec = []
                 hour = now
-                if now == 12:
+                #12 stuffs up the graph, use 0 instead
+                if now == 0:
                     #draw a grahp ending in png here
                     temp_data = DataFrame(pd.read_table(filename,index_col=0\
                             ,header=None))
@@ -61,18 +64,9 @@ while True:
                     #new file for writing todays temps
                     filename = time.ctime()+'.txt'
                 else:
-                    #testing make a graph every 2 hours
+                    #testing make a graph every 2 hrs
                     pass
-                    #if now %2 == 0:
-                    #    temp_data = DataFrame(pd.read_table(filename,\
-                    #            index_col=0,header=None))
-                    #    temp_data.plot(legend=False)
-                    #    plt.xticks(temp_data.index)
-                    #    plt.xlabel("time")
-                    #    plt.ylabel("temp")
-                    #    plt.title("testing %s"%filename)
-                    #else:
-                    #    pass
+
 
     except KeyboardInterrupt:
         ser.close()
@@ -82,5 +76,5 @@ while True:
         pass
 
     except:
-        print "some randome error!"
+        print "some random error, just let if fly!"
         pass
