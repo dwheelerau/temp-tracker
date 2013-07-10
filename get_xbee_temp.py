@@ -11,6 +11,7 @@ from serial import SerialException
 ser = serial.Serial('/dev/ttyUSB0',9600)
 #these are reset each hour
 temp_rec = []
+flag = False
 #change this to [4] for testing will run every 1 min and draw graph at 12mins
 #this is reset each day 12 to 12
 filename = time.ctime()+".txt"
@@ -37,17 +38,18 @@ while True:
             nowh = time.localtime()[3]
             nowm = time.localtime()[4]
             #record each hour, start loop as clock ticks over
-            if nowm == 59:
-                ave_temp = numpy.average(temp_rec)
+            if nowm == 59 and flag==False:
+                ave_temp = numpy.median(temp_rec)
                 print "On %s the temperature was %s deg C"%(time.ctime(),round(ave_temp,1))
                 outfile = open(filename,'a')
                 #hour\ttemp add 1 to hour since 59min
                 out_data = "%s\t%s\n"%(nowh+1,round(ave_temp,1))
                 outfile.write(out_data)
                 outfile.close()
-                #reset
+                
+                #reset and switch flag
                 temp_rec = []
-                hour = nowh
+                flag = True
                 #12 stuffs up the graph, use 0 instead
                 if nowh == 12:
                     #draw a grahp ending in png here
@@ -66,7 +68,12 @@ while True:
                     #testing make a graph every 2 hrs
                     pass
 
+            elif nowm != 59:
+                #no longer 59 so change back to false
+                flag = False
 
+            else:
+                pass
     except KeyboardInterrupt:
         ser.close()
         break
