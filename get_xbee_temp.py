@@ -11,14 +11,15 @@ from serial import SerialException
 ser = serial.Serial('/dev/ttyUSB0',9600)
 #these are reset each hour
 temp_rec = []
+flag = False
 #change this to [4] for testing will run every 1 min and draw graph at 12mins
-hour = time.localtime()[3]
-
 #this is reset each day 12 to 12
 filename = time.ctime()+".txt"
 
 while True:
     try:
+        #lets sleep for 10 seconds to save power
+        #time.sleep(10)
         #main action part of the loop
         if ser.read(1) == '~':#start bite
             vals = []
@@ -33,21 +34,24 @@ while True:
             temp = (analVal/1023.0*1.2*3.0*100)-273.15
             temp_rec.append(temp)
             #write out the temp every hour need to add day function
-            #write a graph a 12:01 pm each day change to [4] for min
-            now = time.localtime()[3]
+            #write a graph sometime between 0-23 hr each day change to [4] for min
+            nowh = time.localtime()[3]
+            nowm = time.localtime()[4]
             #record each hour, start loop as clock ticks over
-            if now != hour:
-                ave_temp = numpy.average(temp_rec)
+            if nowm == 59 and flag==False:
+                ave_temp = numpy.median(temp_rec)
                 print "On %s the temperature was %s deg C"%(time.ctime(),round(ave_temp,1))
                 outfile = open(filename,'a')
-                #hour\ttemp
-                out_data = "%s\t%s\n"%(now,round(ave_temp,1))
+                #hour\ttemp add 1 to hour since 59min
+                out_data = "%s\t%s\n"%(nowh+1,round(ave_temp,1))
                 outfile.write(out_data)
                 outfile.close()
-                #reset
+                
+                #reset and switch flag
                 temp_rec = []
-                hour = now
-                if now == 12:
+                flag = True
+                #12 stuffs up the graph, use 0 instead
+                if nowh == 12:
                     #draw a grahp ending in png here
                     temp_data = DataFrame(pd.read_table(filename,index_col=0\
                             ,header=None))
@@ -61,19 +65,15 @@ while True:
                     #new file for writing todays temps
                     filename = time.ctime()+'.txt'
                 else:
-                    #testing make a graph every 2 hours
+                    #testing make a graph every 2 hrs
                     pass
-                    #if now %2 == 0:
-                    #    temp_data = DataFrame(pd.read_table(filename,\
-                    #            index_col=0,header=None))
-                    #    temp_data.plot(legend=False)
-                    #    plt.xticks(temp_data.index)
-                    #    plt.xlabel("time")
-                    #    plt.ylabel("temp")
-                    #    plt.title("testing %s"%filename)
-                    #else:
-                    #    pass
 
+            elif nowm != 59:
+                #no longer 59 so change back to false
+                flag = False
+
+            else:
+                pass
     except KeyboardInterrupt:
         ser.close()
         break
@@ -82,5 +82,5 @@ while True:
         pass
 
     except:
-        print "some randome error!"
+        print "some random error, just let if fly!"
         pass
